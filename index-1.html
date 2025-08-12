@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="kr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>근로시간 계산기</title>
+  <script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
+  <style>
+    html{
+      font-family: 'Times New Roman', Times, serif;
+      font-size: 16px;
+      text-align: center;
+
+    }
+    table{
+      border: 2px solid #d2d2d2;
+      border-collapse: collapse;
+      font-size: 0.9em;
+    }
+    th, td{
+      border: 1px solid #d2d2d2;
+      border-collapse: collapse;
+    }
+    th{
+      height: 5px;
+    }
+    td {
+      width: 75px;
+      height: 60px;
+    }
+
+    .timeBox {
+      border: 1.5px solid #000000;
+      border-radius: 0;
+      text-align:center;
+      width:40px;    
+    }
+
+    footer {
+      font-size: 10px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <p>이곳에서 당신의 주간 근로시간을 계산하고 원하는 스케줄을 맞춰보세요</p>
+    <p>요일별 총 근로시간을 입력하고, "적용" 버튼을 클릭하여 근로시간을 계산하면 됩니다.</p>
+    <p>근로하는 학기에 맞추어 입력해야 정확한 결과를 얻을 수 있습니다.</p>
+  </header>
+  <hr>
+  <main>
+    <div id="schedule">
+      <p>ㅡ근로학기 선택ㅡ</p>
+      <select id="semester">
+        <option value="1">1학기</option>
+        <option value="2">2학기</option>
+      </select><br>
+      <p>ㅡ근로유형 선택ㅡ</p>
+      <label for="worktype">국가근로장학생(한국장학재단)</label>
+      <input type="radio" name="worktype" value="k" id="worktype" checked>
+      <label for="worktype">봉사장학생(교내)</label>
+      <input type="radio" name="worktype" value="v" id="worktype">
+      <p>ㅡ요일별 총 근무시간 입력ㅡ</p>
+      <label for="monday">월요일</label>
+      <input id="monday" type="text" class="timeBox" value="01:30" onKeyup="inputTimeColon(this);" placeholder="시간:분" maxlength="5"/><br>
+      <label for="tuesday">화요일</label>
+      <input id="tuesday" type="text" class="timeBox" value="01:30" onKeyup="inputTimeColon(this);" placeholder="시간:분" maxlength="5"/><br>
+      <label for="wednesday">수요일</label>
+      <input id="wednesday" type="text" class="timeBox" value="03:00" onKeyup="inputTimeColon(this);" placeholder="시간:분" maxlength="5"/><br>
+      <label for="thursday">목요일</label>
+      <input id="thursday" type="text" class="timeBox" value="04:30" onKeyup="inputTimeColon(this);" placeholder="시간:분" maxlength="5"/><br>
+      <label for="friday">금요일</label>
+      <input id="friday" type="text" class="timeBox" value="05:00" onKeyup="inputTimeColon(this);" placeholder="시간:분" maxlength="5"/><br>
+      <p>학기 근무 스케줄 마감일은 언제입니까?</p>
+      <input type="date" id="endDate" value="2025-08-31">
+      <button onclick="caltime()">적용</button><br>
+    </div>
+    <div class="result">
+    </div>
+  </main><br>
+  <footer>
+    계산방법은 한 학기의 총 요일 개수와 요일별 근무시간, 공휴일 개수 등을 사용하여 계산됩니다<br>
+    이 사이트는 공유 Api를 사용하여 정보를 가져오고 있지만 데이터 갱신이 안될 경우 제대로 된 계산이 안될 수 있으므로 관리자에게 문의하세요<br>
+    근로장학생의 주 최대 근무시간, 월 최대 근무시간 등을 확인한 후 근무시간을 입력해야 합니다<br>
+  </footer>
+
+<script>
+  function inputTimeColon(time) {
+    // replace 함수를 사용하여 콜론( : )을 공백으로 치환한다.
+    var replaceTime = time.value.replace(/\:/g, "");
+
+    // 텍스트박스의 입력값이 4~5글자 사이가 되는 경우에만 실행한다.
+    if(replaceTime.length >= 4 && replaceTime.length < 5) {
+      var hours = replaceTime.substring(0, 2);      // 선언한 변수 hours에 시간값을 담는다.
+      var minute = replaceTime.substring(2, 4);    // 선언한 변수 minute에 분을 담는다.
+
+      // isFinite함수를 사용하여 문자가 선언되었는지 확인한다.
+      if(isFinite(hours + minute) == false) {
+          alert("문자는 입력하실 수 없습니다.");
+          return false;
+      }
+
+      // 두 변수의 시간과 분을 합쳐 입력한 시간이 24시가 넘는지를 체크한다.
+      if(hours + minute > 2400) {
+          alert("시간은 24시를 넘길 수 없습니다.");
+          time.value = "24:00";
+          return false;
+      }
+
+      // 입력한 분의 값이 60분을 넘는지 체크한다.
+      if(minute > 60) {
+          alert("분은 60분을 넘길 수 없습니다.");
+          return false;
+      }
+      time.value = hours + ":" + minute;
+    }
+  }
+
+</script>
+<script>  
+  let monday,tuesday,wednesday,thursday,friday,worktype;
+  let Workdays,Daycounts = [0,0,0,0,0]; // 월~금(1~5) 요일 개수
+  const year = new Date().getFullYear(); // 현재 연도
+  let startDate = `${year}-03-02`; // 1학기 시작일로 설정
+  let holidayCounts = [0,0,0,0,0];
+  let worklimit = 400;
+
+  function getDayOfWeek(yyyyMMdd){
+    const dayOfWeek = new Date(yyyyMMdd).getDay(); 
+    //0:일, 1:월, 2:화, 3:수, 4:목, 5:금, 6:토
+    return dayOfWeek;
+  }
+
+  function countWeekdaysBetween(startDateStr, endDateStr) {
+    // startDateStr, endDateStr: "YYYY-MM-DD" 형식
+    const start = new Date(startDateStr);
+    const end = new Date(endDateStr);
+    const counts = [0, 0, 0, 0, 0];
+  
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      const day = d.getDay();
+      if(day >= 1 && day <=5) {
+        counts[day  -1]++;
+      }
+    }
+    return counts;
+  }
+
+  function cal_totalworktime(Workdays, monday, tuesday, wednesday, thursday, friday) {
+      let totalWorkTime = 0;
+      totalWorkTime += Workdays[0] * (parseInt(monday[0]) + parseInt(monday[1])/60);//월
+      totalWorkTime += Workdays[1] * (parseInt(tuesday[0]) + parseInt(tuesday[1])/60);//화
+      totalWorkTime += Workdays[2] * (parseInt(wednesday[0]) + parseInt(wednesday[1])/60);//수
+      totalWorkTime += Workdays[3] * (parseInt(thursday[0]) + parseInt(thursday[1])/60);//목
+      totalWorkTime += Workdays[4] * (parseInt(friday[0]) + parseInt(friday[1])/60);//금
+
+      return totalWorkTime;
+  }
+
+  function cal_wholeworktime(monday, tuesday, wednesday, thursday, friday) {
+    let wholeWorkTime = 0;
+    if (monday.length == 2 && tuesday.length == 2 && wednesday.length == 2 && thursday.length == 2 && friday.length == 2) {
+      wholeWorkTime += parseInt(monday[0]) + parseInt(monday[1])/60 ;
+      wholeWorkTime += parseInt(tuesday[0]) + parseInt(tuesday[1])/60 ;
+      wholeWorkTime += parseInt(wednesday[0]) + parseInt(wednesday[1])/60 ;
+      wholeWorkTime += parseInt(thursday[0]) + parseInt(thursday[1])/60 ;
+      wholeWorkTime += parseInt(friday[0]) + parseInt(friday[1])/60 ;
+    }
+
+    return wholeWorkTime;
+  }
+
+  function print_result(wholeWorkTime, totalWorkTime, lefttime, Workdays, holidayCounts) {
+    $(".result").empty(); // 결과 영역 초기화
+    $(".result").append("<h2>근로시간 계산 결과</h2>");
+    $(".result").append(`<p>일주일 총 근로시간 = ${wholeWorkTime.toFixed(2)}시간</p>`);
+    $(".result").append(`<p>학기중 총 근로시간 = ${totalWorkTime.toFixed(2)}시간</p><h2>방학 중 남은시간 = ${lefttime.toFixed(2)}시간</h2><h2>일수로 환산하면 = 약${Math.floor(lefttime / 7).toFixed(2)}일</h2>`);
+    $(".result").append("-확인해보기-<br>");
+    $(".result").append("월요일 근무일수 : " + Workdays[0] + "일, 휴일은 " + holidayCounts[0] + "일 <br>");
+    $(".result").append("화요일 근무일수 : " + Workdays[1] + "일, 휴일은" + holidayCounts[1] +"일 <br>");
+    $(".result").append("수요일 근무일수 : " + Workdays[2] + "일, 휴일은" + holidayCounts[2] +"일 <br>");
+    $(".result").append("목요일 근무일수 : " + Workdays[3] + "일, 휴일은" + holidayCounts[3] +"일 <br>");
+    $(".result").append("금요일 근무일수 : " + Workdays[4] + "일, 휴일은" + holidayCounts[4] +"일 <br>");
+    $(".result").append("금요일 근무일수 : " + Workdays[4] + "일, 휴일은" + holidayCounts[4] +"일 <br>");
+  }
+
+  function caltime() {
+    $(".result").empty(); // 결과 영역 초기화
+    monday = $("#monday").val().split(":");
+    tuesday = $("#tuesday").val().split(":");
+    wednesday = $("#wednesday").val().split(":");
+    thursday = $("#thursday").val().split(":");
+    friday = $("#friday").val().split(":");
+    endDate = $("#endDate").val();
+    worktype = $("input[name='worktype']:checked").val(); // 선택된 근로유형 가져오기
+    if (worktype == "v") {
+      worklimit = 480;
+    }
+
+    let wholeWorkTime = cal_wholeworktime(monday, tuesday, wednesday, thursday, friday);
+    if (wholeWorkTime > worklimit) {
+      alert("입력한 근로시간이 한 학기 최대 근로시간을 초과합니다. 다시 확인해주세요.");
+      return;
+    }
+    const semester = document.getElementById('semester').value; //학기 값 가져와잇
+    if( semester == 2) {
+      startDate = `${year}-09-01`; // 2학기 시작일로 설정
+    }
+    Daycounts = countWeekdaysBetween( `${startDate}`, `${endDate}`); // 시작일과 종료일 사이의 요일 개수 구하기
+
+    fetch("https://holidays.hyunbin.page/basic.json")//현빈님 정말 감사합니다
+    .then(response => response.json())
+    .then(data => {
+      let cholidays = data[year];
+      console.log(cholidays);
+      for (let i in cholidays) {
+        if(i <= `${endDate}` && i >= `${startDate}`) {
+          if(getDayOfWeek(i)!=0 || getDayOfWeek(i)!=6) {
+          // 월~금(1~5)인 경우에만 카운트
+          const dayOfWeek = getDayOfWeek(i);
+          if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+            holidayCounts[dayOfWeek - 1]++;
+          }
+         }
+        }
+      }
+      var Sanum = getDayOfWeek(`${year}-03-12`);
+      if( semester == 1) {
+        holidayCounts[Sanum-1]++;//개교기념일 추가...
+      }
+      Workdays = Daycounts.map((count, index) => count - holidayCounts[index]);
+      //이제 주별 요일 개수에서 공휴일 개수를 빼면??? 총 근무일수가 나온다
+      let totalWorkTime = cal_totalworktime(Workdays, monday, tuesday, wednesday, thursday, friday);
+      const lefttime = worklimit - totalWorkTime;
+      
+      print_result(wholeWorkTime, totalWorkTime, lefttime, Workdays, holidayCounts);
+    })
+    .catch(error => {
+      console.error('공휴일 데이터 가져오기 실패:', error);
+    });
+    //끝
+  }
+  
+</script>
+</body>
+</html>
